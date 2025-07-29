@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        targetPlatform: [Android, WebGL, iOS]
+        #targetPlatform: [Android, WebGL, iOS]
+        targetPlatform: [iOS]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,21 +49,16 @@ jobs:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
 
-  ipa-build:
-    name: Build unsigned IPA from Xcode project
-    runs-on: macos-13
-    needs: unity-build
-    steps:
+ipa-build:
+  name: Build unsigned IPA from Xcode project
+  runs-on: macos-13
+  needs: unity-build
+  steps:
     - name: Download iOS Xcode project
       uses: actions/download-artifact@v4
       with:
         name: iOS-Xcode-Project
         path: build/iOS
-
-    - name: Unzip iOS Xcode project
-      run: |
-        unzip -q build/iOS/Build-iOS.zip -d build/iOS
-        echo "✅ Unzipped iOS Xcode project to build/iOS"
 
     - name: Set up build paths
       run: |
@@ -72,7 +68,7 @@ jobs:
     - name: Build Xcode archive (xcarchive)
       run: |
         xcodebuild \
-          -project "build/iOS/iOS/Unity-iPhone.xcodeproj" \
+          -project "build/iOS/Unity-iPhone.xcodeproj" \
           -scheme "Unity-iPhone" \
           -configuration Release \
           -archivePath build/output/Unity.xcarchive \
@@ -102,5 +98,8 @@ jobs:
     - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
+        name: iOS-IPA
+        path: build/output/ipa
+
         name: iOS-IPA
         path: build/output/ipa
