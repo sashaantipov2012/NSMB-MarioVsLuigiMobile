@@ -48,7 +48,7 @@ jobs:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
 
-ipa-build:
+  ipa-build:
   name: Build unsigned IPA from Xcode project
   runs-on: macos-13
   needs: unity-build
