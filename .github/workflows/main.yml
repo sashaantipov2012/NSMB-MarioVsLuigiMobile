@@ -74,7 +74,7 @@ jobs:
       - name: Build Xcode archive (xcarchive)
         run: |
           xcodebuild \
-            -project "build/iOS/Unity-iPhone.xcodeproj" \
+            -project "build/iOS/iOS/Unity-iPhone.xcodeproj" \
             -scheme "Unity-iPhone" \
             -configuration Release \
             -archivePath build/output/Unity.xcarchive \
