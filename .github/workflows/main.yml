@@ -59,7 +59,13 @@ jobs:
         with:
           name: iOS-Xcode-Project
           path: build/iOS
-
+      - name: List files for debugging
+        run: |
+          echo "📁 Listing current directory:"
+          pwd
+          ls -la
+          echo "🔍 Recursively listing files in ./build:"
+          find build
       - name: Set up build paths
         run: |
           mkdir -p build/output
