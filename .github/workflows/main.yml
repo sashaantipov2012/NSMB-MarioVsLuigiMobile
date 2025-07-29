@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        #targetPlatform: [Android, WebGL, iOS]
         targetPlatform: [iOS]
     steps:
       - uses: actions/checkout@v4
@@ -33,21 +32,12 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
 
-      # Upload iOS Xcode project to artifact
       - name: Upload Xcode Project
         if: matrix.targetPlatform == 'iOS'
         uses: actions/upload-artifact@v4
         with:
           name: iOS-Xcode-Project
           path: build/iOS
-
-      # Upload Android or WebGL builds
-      - name: Upload Other Builds
-        if: matrix.targetPlatform != 'iOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build-${{ matrix.targetPlatform }}
-          path: build/${{ matrix.targetPlatform }}
 
   ipa-build:
     name: Build unsigned IPA from Xcode project
@@ -59,6 +49,7 @@ jobs:
         with:
           name: iOS-Xcode-Project
           path: build/iOS
+
       - name: List files for debugging
         run: |
           echo "📁 Listing current directory:"
@@ -66,10 +57,9 @@ jobs:
           ls -la
           echo "🔍 Recursively listing files in ./build:"
           find build
+
       - name: Set up build paths
-        run: |
-          mkdir -p build/output
-          echo "Derived data and output folders created."
+        run: mkdir -p build/output
 
       - name: Build Xcode archive (xcarchive)
         run: |
@@ -83,24 +73,38 @@ jobs:
 
       - name: Export unsigned IPA
         run: |
+          cat > exportOptions.plist <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>ad-hoc</string>
+  <key>signingStyle</key>
+  <string>manual</string>
+  <key>compileBitcode</key>
+  <false/>
+  <key>destination</key>
+  <string>export</string>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>manageAppVersionAndBuildNumber</key>
+  <false/>
+  <key>signingCertificate</key>
+  <string></string>
+  <key>provisioningProfiles</key>
+  <dict/>
+</dict>
+</plist>
+EOF
+
           xcodebuild \
             -exportArchive \
             -archivePath build/output/Unity.xcarchive \
             -exportPath build/output/ipa \
-            -exportOptionsPlist <(echo "
-              {
-                method = ad-hoc;
-                signingStyle = manual;
-                compileBitcode = false;
-                destination = export;
-                stripSwiftSymbols = true;
-                manageAppVersionAndBuildNumber = false;
-                signingCertificate = \"\";
-                provisioningProfiles = {};
-              }
-            ") \
+            -exportOptionsPlist exportOptions.plist \
             CODE_SIGNING_ALLOWED=NO
-  
+
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
