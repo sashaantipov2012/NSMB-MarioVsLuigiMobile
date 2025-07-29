@@ -8,8 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        #targetPlatform: [Android, WebGL, iOS]
-        targetPlatform: [iOS]
+        targetPlatform: [Android, WebGL, iOS]
     steps:
       - uses: actions/checkout@v4
         with:
