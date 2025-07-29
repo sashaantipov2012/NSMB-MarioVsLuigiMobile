@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   buildForAllSupportedPlatforms:
     name: Build for ${{ matrix.targetPlatform }}
-    runs-on: ${{ matrix.targetPlatform == 'iOS' && 'macos-latest' || 'ubuntu-latest' }}
+    runs-on: macos-13 # Required for Xcode
     strategy:
       fail-fast: false
       matrix:
@@ -13,6 +13,7 @@ jobs:
           - iOS
           - Android
           - WebGL
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,24 +37,26 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
 
-      # ➕ Add this step for iOS only: Build Xcode project into .ipa
-      - name: Build Xcode project to IPA
+      # --- iOS specific step: Build Xcode project into an unsigned IPA
+      - name: Build unsigned .ipa from Xcode project
         if: matrix.targetPlatform == 'iOS'
         uses: buildalon/unity-xcode-builder@v1
         with:
           project-path: build/iOS
           scheme: Unity-iPhone
-          output-path: build/iOS-ipa
-          export-method: ad-hoc
-        env:
-          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
-          CODE_SIGN_IDENTITY: ${{ secrets.CODE_SIGN_IDENTITY }}
-          PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}
-          APP_BUNDLE_ID: com.yourcompany.yourapp
+          export-method: development
+          export-options-plist: false
+          signing-style: manual
+          compile-bitcode: false
+          team-id: ''
+          code-sign-identity: ''
+          provisioning-profile: ''
+          configuration: Release
 
-      - uses: actions/upload-artifact@v4
+      # Upload final build (iOS .ipa or Android/WebGL output)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: |
-            build/${{ matrix.targetPlatform }}
-            build/iOS-ipa/*.ipa
+            ${{ matrix.targetPlatform == 'iOS' && 'build/iOS/build.ipa' || format('build/{0}', matrix.targetPlatform) }}
