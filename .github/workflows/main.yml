@@ -1,19 +1,14 @@
-name: Build
+name: Unity CI Build
 
 on: [push, pull_request]
 
 jobs:
-  buildForAllSupportedPlatforms:
-    name: Build for ${{ matrix.targetPlatform }}
-    runs-on: macos-13 # Required for Xcode
+  unity-build:
+    name: Unity Build
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        targetPlatform:
-          - iOS
-          - Android
-          - WebGL
-
+        targetPlatform: [Android, WebGL, iOS]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,9 +32,34 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
 
-      # --- iOS specific step: Build Xcode project into an unsigned IPA
-      - name: Build unsigned .ipa from Xcode project
+      # Upload iOS Xcode project to artifact
+      - name: Upload Xcode Project
         if: matrix.targetPlatform == 'iOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-Xcode-Project
+          path: build/iOS
+
+      # Upload Android or WebGL builds
+      - name: Upload Other Builds
+        if: matrix.targetPlatform != 'iOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-${{ matrix.targetPlatform }}
+          path: build/${{ matrix.targetPlatform }}
+
+  ipa-build:
+    name: Build IPA from Xcode project
+    runs-on: macos-13
+    needs: unity-build
+    if: always()  # optional: run regardless of previous success/failure
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: iOS-Xcode-Project
+          path: build/iOS
+
+      - name: Build unsigned IPA
         uses: buildalon/unity-xcode-builder@v1
         with:
           project-path: build/iOS
@@ -53,10 +73,8 @@ jobs:
           provisioning-profile: ''
           configuration: Release
 
-      # Upload final build (iOS .ipa or Android/WebGL output)
-      - name: Upload build artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Build-${{ matrix.targetPlatform }}
-          path: |
-            ${{ matrix.targetPlatform == 'iOS' && 'build/iOS/build.ipa' || format('build/{0}', matrix.targetPlatform) }}
+          name: iOS-IPA
+          path: build/iOS/build.ipa
