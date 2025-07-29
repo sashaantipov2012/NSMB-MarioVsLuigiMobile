@@ -53,52 +53,49 @@ jobs:
     runs-on: macos-13
     needs: unity-build
     steps:
-    - name: Download iOS Xcode project
-      uses: actions/download-artifact@v4
-      with:
-        name: iOS-Xcode-Project
-        path: build/iOS
+      - name: Download iOS Xcode project
+        uses: actions/download-artifact@v4
+        with:
+          name: iOS-Xcode-Project
+          path: build/iOS
 
-    - name: Set up build paths
-      run: |
-        mkdir -p build/output
-        echo "Derived data and output folders created."
+      - name: Set up build paths
+        run: |
+          mkdir -p build/output
+          echo "Derived data and output folders created."
 
-    - name: Build Xcode archive (xcarchive)
-      run: |
-        xcodebuild \
-          -project "build/iOS/Unity-iPhone.xcodeproj" \
-          -scheme "Unity-iPhone" \
-          -configuration Release \
-          -archivePath build/output/Unity.xcarchive \
-          archive \
-          CODE_SIGNING_ALLOWED=NO
+      - name: Build Xcode archive (xcarchive)
+        run: |
+          xcodebuild \
+            -project "build/iOS/Unity-iPhone.xcodeproj" \
+            -scheme "Unity-iPhone" \
+            -configuration Release \
+            -archivePath build/output/Unity.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO
 
-    - name: Export unsigned IPA
-      run: |
-        xcodebuild \
-          -exportArchive \
-          -archivePath build/output/Unity.xcarchive \
-          -exportPath build/output/ipa \
-          -exportOptionsPlist <(echo "
-            {
-              method = ad-hoc;
-              signingStyle = manual;
-              compileBitcode = false;
-              destination = export;
-              stripSwiftSymbols = true;
-              manageAppVersionAndBuildNumber = false;
-              signingCertificate = \"\";
-              provisioningProfiles = {};
-            }
-          ") \
-          CODE_SIGNING_ALLOWED=NO
-
-    - name: Upload IPA
-      uses: actions/upload-artifact@v4
-      with:
-        name: iOS-IPA
-        path: build/output/ipa
-
-        name: iOS-IPA
-        path: build/output/ipa
+      - name: Export unsigned IPA
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath build/output/Unity.xcarchive \
+            -exportPath build/output/ipa \
+            -exportOptionsPlist <(echo "
+              {
+                method = ad-hoc;
+                signingStyle = manual;
+                compileBitcode = false;
+                destination = export;
+                stripSwiftSymbols = true;
+                manageAppVersionAndBuildNumber = false;
+                signingCertificate = \"\";
+                provisioningProfiles = {};
+              }
+            ") \
+            CODE_SIGNING_ALLOWED=NO
+  
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-IPA
+          path: build/output/ipa
