@@ -52,13 +52,17 @@ jobs:
     name: Build unsigned IPA from Xcode project
     runs-on: macos-13
     needs: unity-build
-    if: always()
     steps:
     - name: Download iOS Xcode project
       uses: actions/download-artifact@v4
       with:
         name: iOS-Xcode-Project
         path: build/iOS
+
+    - name: Unzip iOS Xcode project
+      run: |
+        unzip -q build/iOS/Build-iOS.zip -d build/iOS
+        echo "✅ Unzipped iOS Xcode project to build/iOS"
 
     - name: Set up build paths
       run: |
@@ -68,7 +72,7 @@ jobs:
     - name: Build Xcode archive (xcarchive)
       run: |
         xcodebuild \
-          -project "build/Ios/Unity-iPhone.xcodeproj" \
+          -project "build/iOS/iOS/Unity-iPhone.xcodeproj" \
           -scheme "Unity-iPhone" \
           -configuration Release \
           -archivePath build/output/Unity.xcarchive \
@@ -100,4 +104,3 @@ jobs:
       with:
         name: iOS-IPA
         path: build/output/ipa
-
