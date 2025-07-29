@@ -49,10 +49,10 @@ jobs:
           path: build/${{ matrix.targetPlatform }}
 
   ipa-build:
-  name: Build unsigned IPA from Xcode project
-  runs-on: macos-13
-  needs: unity-build
-  steps:
+    name: Build unsigned IPA from Xcode project
+    runs-on: macos-13
+    needs: unity-build
+    steps:
     - name: Download iOS Xcode project
       uses: actions/download-artifact@v4
       with:
