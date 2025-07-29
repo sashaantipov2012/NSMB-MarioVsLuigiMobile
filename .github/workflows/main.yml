@@ -64,14 +64,10 @@ jobs:
         with:
           project-path: build/iOS
           scheme: Unity-iPhone
-          export-method: development
-          export-options-plist: false
-          signing-style: manual
-          compile-bitcode: false
-          team-id: ''
-          code-sign-identity: ''
-          provisioning-profile: ''
           configuration: Release
+          export-option: none
+          archive-type: app
+          xcode-version: latest
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
